@@ -257,11 +257,12 @@
 
   /* ── Add Text ─────────────────────────────────────────── */
   document.getElementById('addTextBtn').addEventListener('click', () => {
-    const txt = new fabric.IText('Type here…', {
+    const txt = new fabric.Textbox('Type here…', {
       left: CANVAS_W / 2,
       top: CANVAS_H / 2,
       originX: 'center',
       originY: 'center',
+      width: CANVAS_W * 0.7,
       fontFamily: document.getElementById('fontFamily').value,
       fontSize: parseInt(document.getElementById('fontSize').value),
       fill: document.getElementById('textColor').value,
