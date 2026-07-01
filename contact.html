@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact — NewsFrame</title>
+  <link rel="icon" href="/vite.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <span class="brand-dot"></span>
+      NewsFrame
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Editor</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html" class="active">Contact</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="page-hero">
+  <h1>Get in <span>Touch</span></h1>
+  <p>Have a question, feedback, or a feature request? We'd love to hear from you.</p>
+</div>
+
+<!-- CONTACT -->
+<main class="main-content">
+  <section class="contact-section">
+    <div class="contact-grid">
+
+      <!-- Info -->
+      <div class="contact-info">
+        <h2>Let's Talk</h2>
+        <p>
+          Whether you're a news organisation looking for custom branding features,
+          a freelancer with a question, or just want to say hello — drop us a message
+          and we'll get back to you promptly.
+        </p>
+
+        <div class="contact-meta">
+          <div class="contact-meta-item">
+            <span class="meta-icon">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </span>
+            hello@newsframe.app
+          </div>
+          <div class="contact-meta-item">
+            <span class="meta-icon">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </span>
+            Karachi, Pakistan
+          </div>
+          <div class="contact-meta-item">
+            <span class="meta-icon">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </span>
+            Response within 24 hours
+          </div>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <div class="contact-form-card">
+        <form class="contact-form" id="contactForm" novalidate>
+          <div class="form-group">
+            <label for="contactName">Full Name</label>
+            <input type="text" id="contactName" class="form-control" placeholder="Your name" autocomplete="name" />
+            <span class="field-error" id="nameError">Please enter your name.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="contactEmail">Email Address</label>
+            <input type="email" id="contactEmail" class="form-control" placeholder="you@example.com" autocomplete="email" />
+            <span class="field-error" id="emailError">Please enter a valid email address.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="contactMessage">Message</label>
+            <textarea id="contactMessage" class="form-control" rows="5" placeholder="Tell us how we can help…"></textarea>
+            <span class="field-error" id="messageError">Please write a message (at least 10 characters).</span>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Send Message
+          </button>
+        </form>
+
+        <div class="form-success" id="formSuccess">
+          <svg width="52" height="52" fill="none" stroke="var(--success)" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>
+          <h3>Message Sent!</h3>
+          <p>Thank you for reaching out. We'll get back to you within 24 hours.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>&copy; 2024 NewsFrame &mdash; Professional News Thumbnail Editor &nbsp;|&nbsp; <a href="index.html">Editor</a> &nbsp;|&nbsp; <a href="about.html">About</a></p>
+</footer>
+
+<script>
+  /* Navbar */
+  const navToggle = document.getElementById('navToggle');
+  const navLinks = document.getElementById('navLinks');
+  navToggle.addEventListener('click', () => {
+    navToggle.classList.toggle('open');
+    navLinks.classList.toggle('open');
+  });
+
+  /* Contact form validation */
+  const form = document.getElementById('contactForm');
+  const successPanel = document.getElementById('formSuccess');
+
+  function validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  function setFieldError(inputId, errorId, show) {
+    const input = document.getElementById(inputId);
+    const error = document.getElementById(errorId);
+    if (show) {
+      input.classList.add('invalid');
+      error.style.display = 'block';
+    } else {
+      input.classList.remove('invalid');
+      error.style.display = 'none';
+    }
+  }
+
+  // Clear errors on input
+  ['contactName', 'contactEmail', 'contactMessage'].forEach((id) => {
+    document.getElementById(id).addEventListener('input', function () {
+      this.classList.remove('invalid');
+      const map = { contactName: 'nameError', contactEmail: 'emailError', contactMessage: 'messageError' };
+      document.getElementById(map[id]).style.display = 'none';
+    });
+  });
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('contactName').value.trim();
+    const email = document.getElementById('contactEmail').value.trim();
+    const message = document.getElementById('contactMessage').value.trim();
+
+    let valid = true;
+    if (!name) { setFieldError('contactName', 'nameError', true); valid = false; }
+    else setFieldError('contactName', 'nameError', false);
+
+    if (!validateEmail(email)) { setFieldError('contactEmail', 'emailError', true); valid = false; }
+    else setFieldError('contactEmail', 'emailError', false);
+
+    if (message.length < 10) { setFieldError('contactMessage', 'messageError', true); valid = false; }
+    else setFieldError('contactMessage', 'messageError', false);
+
+    if (!valid) return;
+
+    // Show success (no backend)
+    form.style.display = 'none';
+    successPanel.style.display = 'block';
+  });
+</script>
+</body>
+</html>

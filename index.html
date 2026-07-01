@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NewsFrame — Thumbnail Editor</title>
+  <link rel="icon" href="/vite.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="style.css" />
+  <!-- Fabric.js -->
+  <script src="https://cdn.jsdelivr.net/npm/fabric@5/dist/fabric.min.js"></script>
+  <!-- Google Fonts preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <span class="brand-dot"></span>
+      NewsFrame
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html" class="active">Editor</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="page-hero">
+  <h1>News Thumbnail <span>Editor</span></h1>
+  <p>Create professional social-media news graphics in seconds. Upload your image, add text in any language, and download instantly.</p>
+</div>
+
+<!-- EDITOR -->
+<main class="main-content">
+  <div class="editor-layout">
+
+    <!-- LEFT PANEL -->
+    <aside>
+
+      <!-- Upload -->
+      <div class="panel" style="margin-bottom:18px">
+        <div class="panel-header">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload Image
+        </div>
+        <div class="panel-body">
+          <div class="upload-zone" id="uploadZone">
+            <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <p>Drag &amp; drop an image here<br>or <strong>click to browse</strong></p>
+          </div>
+          <input type="file" id="fileInput" accept="image/*" hidden />
+          <button class="btn btn-secondary btn-full btn-sm" id="chooseFileBtn">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Choose File
+          </button>
+        </div>
+      </div>
+
+      <!-- Logo -->
+      <div class="panel" style="margin-bottom:18px">
+        <div class="panel-header">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          Logo
+        </div>
+        <div class="panel-body">
+          <p style="font-size:.78rem;color:var(--gray-400);line-height:1.5;">Logo auto-placed on image upload. Drag to reposition, or use the handle to resize.</p>
+          <div class="input-row">
+            <button class="btn btn-secondary btn-sm" id="resetLogoBtn">Reset Position</button>
+            <button class="btn btn-secondary btn-sm" id="toggleLogoBtn">Hide Logo</button>
+          </div>
+          <div class="form-group">
+            <label>Logo Opacity</label>
+            <input type="range" class="form-control" id="logoOpacity" min="10" max="100" value="100" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Adjustments -->
+      <div class="panel">
+        <div class="panel-header">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
+          Image Border
+        </div>
+        <div class="panel-body">
+          <div class="toggle-wrap">
+            <label for="borderToggle">Enable Border</label>
+            <label class="toggle">
+              <input type="checkbox" id="borderToggle" />
+              <div class="toggle-track"></div>
+            </label>
+          </div>
+          <div id="borderControlsWrapper" style="display:none;flex-direction:column;gap:12px;">
+            <div class="color-pair">
+              <div class="form-group">
+                <label>Color</label>
+                <input type="color" class="form-control" id="borderColor2" value="#ffffff" />
+              </div>
+              <div class="form-group">
+                <label>Style</label>
+                <select class="form-control" id="borderStyle2">
+                  <option value="solid">Solid</option>
+                  <option value="dashed">Dashed</option>
+                  <option value="dotted">Dotted</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Thickness: <span id="borderThicknessVal2">4</span>px</label>
+              <input type="range" class="form-control" id="borderThickness2" min="1" max="40" value="4" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- CANVAS AREA -->
+    <section class="canvas-area">
+      <div class="canvas-toolbar">
+        <!-- History -->
+        <button class="btn-icon" id="undoBtn" title="Undo (Ctrl+Z)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.1"/></svg>
+        </button>
+        <button class="btn-icon" id="redoBtn" title="Redo (Ctrl+Y)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-4.1"/></svg>
+        </button>
+        <div class="toolbar-sep"></div>
+
+        <!-- Add Text -->
+        <button class="btn btn-primary btn-sm" id="addTextBtn">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Text
+        </button>
+        <div class="toolbar-sep"></div>
+
+        <!-- Object controls (shown when object selected) -->
+        <div id="objectControls" style="display:none;gap:4px;align-items:center;">
+          <button class="btn-icon" id="bringFrontBtn" title="Bring to Front">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/></svg>
+          </button>
+          <button class="btn-icon" id="sendBackBtn" title="Send to Back">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="17 13 12 18 7 13"/><polyline points="17 6 12 11 7 6"/></svg>
+          </button>
+          <button class="btn-icon btn-danger" id="deleteObjBtn" title="Delete Selected">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          </button>
+          <div class="toolbar-sep"></div>
+        </div>
+
+        <!-- Clear / Download -->
+        <button class="btn btn-danger btn-sm" id="clearAllBtn">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+          Clear All
+        </button>
+        <div class="toolbar-sep"></div>
+        <div class="download-row">
+          <select class="form-control btn-sm" id="exportFormat" style="width:80px;padding:6px 8px;">
+            <option value="png">PNG</option>
+            <option value="jpeg">JPG</option>
+          </select>
+          <button class="btn btn-accent btn-sm" id="downloadBtn">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download
+          </button>
+        </div>
+      </div>
+
+      <div class="canvas-wrap">
+        <div id="canvas-container">
+          <canvas id="mainCanvas"></canvas>
+        </div>
+      </div>
+
+      <div class="canvas-status">
+        <span id="statusMsg">Upload an image to get started.</span>
+        <span id="canvasDimensions"></span>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL: Text Formatting -->
+    <aside>
+      <div class="panel">
+        <div class="panel-header">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+          Text Formatting
+        </div>
+        <div class="panel-body">
+          <p style="font-size:.78rem;color:var(--gray-400);">Select a text box on the canvas to edit its style.</p>
+
+          <!-- Font family -->
+          <div class="form-group">
+            <label>Font Family</label>
+            <select class="form-control" id="fontFamily">
+              <option value="'Noto Nastaliq Urdu', Arial, sans-serif">Noto Nastaliq Urdu</option>
+              <option value="Inter, Arial, sans-serif" selected>Inter</option>
+              <option value="'Playfair Display', Georgia, serif">Playfair Display</option>
+              <option value="Georgia, serif">Georgia</option>
+              <option value="'Courier New', monospace">Courier New</option>
+              <option value="Impact, Arial Narrow, sans-serif">Impact</option>
+              <option value="Arial, sans-serif">Arial</option>
+              <option value="'Times New Roman', serif">Times New Roman</option>
+            </select>
+          </div>
+
+          <!-- Style toggles -->
+          <div class="form-group">
+            <label>Style</label>
+            <div class="toolbar-row">
+              <button class="btn-icon" id="boldBtn" title="Bold"><b>B</b></button>
+              <button class="btn-icon" id="italicBtn" title="Italic"><i>I</i></button>
+              <button class="btn-icon" id="underlineBtn" title="Underline"><u>U</u></button>
+            </div>
+          </div>
+
+          <!-- Font size -->
+          <div class="form-group">
+            <label>Font Size</label>
+            <div class="input-row">
+              <button class="btn-icon btn-sm" id="fontSizeDown">−</button>
+              <input type="number" class="form-control" id="fontSize" value="36" min="8" max="200" style="text-align:center;" />
+              <button class="btn-icon btn-sm" id="fontSizeUp">+</button>
+            </div>
+          </div>
+
+          <!-- Alignment -->
+          <div class="form-group">
+            <label>Alignment</label>
+            <div class="toolbar-row">
+              <button class="btn-icon" id="alignLeft" title="Align Left">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></svg>
+              </button>
+              <button class="btn-icon" id="alignCenter" title="Align Center">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+              </button>
+              <button class="btn-icon" id="alignRight" title="Align Right">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="6" y1="18" x2="21" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Text Color -->
+          <div class="color-pair">
+            <div class="form-group">
+              <label>Text Color</label>
+              <input type="color" class="form-control" id="textColor" value="#ffffff" />
+            </div>
+            <div class="form-group">
+              <label>Background</label>
+              <input type="color" class="form-control" id="textBgColor" value="#000000" />
+            </div>
+          </div>
+          <div class="toggle-wrap">
+            <label for="textBgToggle">Text Background</label>
+            <label class="toggle">
+              <input type="checkbox" id="textBgToggle" />
+              <div class="toggle-track"></div>
+            </label>
+          </div>
+
+          <!-- Line height -->
+          <div class="form-group">
+            <label>Line Height: <span id="lineHeightVal">1.2</span></label>
+            <input type="range" class="form-control" id="lineHeight" min="0.8" max="3" step="0.1" value="1.2" />
+          </div>
+
+          <!-- Char spacing -->
+          <div class="form-group">
+            <label>Letter Spacing: <span id="charSpacingVal">0</span></label>
+            <input type="range" class="form-control" id="charSpacing" min="-200" max="800" step="10" value="0" />
+          </div>
+
+          <!-- Text direction for RTL (Urdu/Arabic) -->
+          <div class="form-group">
+            <label>Text Direction</label>
+            <div class="toolbar-row">
+              <button class="btn-icon active" id="dirLtr" title="Left to Right (LTR)">LTR</button>
+              <button class="btn-icon" id="dirRtl" title="Right to Left (RTL)">RTL</button>
+            </div>
+          </div>
+
+          <!-- Opacity -->
+          <div class="form-group">
+            <label>Opacity: <span id="textOpacityVal">100</span>%</label>
+            <input type="range" class="form-control" id="textOpacity" min="10" max="100" value="100" />
+          </div>
+
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</main>
+
+<footer>
+  <p>&copy; 2024 NewsFrame &mdash; Professional News Thumbnail Editor &nbsp;|&nbsp; <a href="about.html">About</a> &nbsp;|&nbsp; <a href="contact.html">Contact</a></p>
+</footer>
+
+<script type="module" src="/script.js"></script>
+</body>
+</html>
