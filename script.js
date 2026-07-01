@@ -5,7 +5,7 @@
 
   /* ── Canvas Setup ─────────────────────────────────────── */
   const CANVAS_W = 800;
-  const CANVAS_H = 600;
+  const CANVAS_H = 800; // Canvas height bara kiya text ke liye space
 
   const fabricCanvas = new fabric.Canvas('mainCanvas', {
     width: CANVAS_W,
@@ -80,7 +80,13 @@
   }
 
   fabricCanvas.on('object:added', saveState);
-  fabricCanvas.on('object:modified', saveState);
+  fabricCanvas.on('object:modified', () => {
+    // Update full width background when text is moved or resized
+    if (document.getElementById('fullBgToggle').checked) {
+      setTimeout(applyFullWidthBackground, 50);
+    }
+    saveState();
+  });
   fabricCanvas.on('object:removed', saveState);
 
   /* ── Globals ──────────────────────────────────────────── */
@@ -88,6 +94,27 @@
   let logoObj = null;
   let borderRect = null;
   let logoVisible = true;
+  let separatorLine = null;
+
+  // Add visual separator between image and text areas
+  function addSeparatorLine() {
+    if (separatorLine) {
+      fabricCanvas.remove(separatorLine);
+    }
+    
+    const line = new fabric.Line([0, CANVAS_H * 0.6, CANVAS_W, CANVAS_H * 0.6], {
+      stroke: 'rgba(255,255,255,0.2)',
+      strokeWidth: 1,
+      strokeDashArray: [5, 5],
+      selectable: false,
+      evented: false,
+      name: 'separator',
+      id: 'separator'
+    });
+    
+    fabricCanvas.add(line);
+    separatorLine = line;
+  }
 
   /* ── Upload ───────────────────────────────────────────── */
   const uploadZone = document.getElementById('uploadZone');
@@ -121,25 +148,33 @@
         if (bgImage) fabricCanvas.remove(bgImage);
         if (borderRect) { fabricCanvas.remove(borderRect); borderRect = null; }
 
+        // Image ko sirf upper portion mein fit karna
+        const maxImageHeight = CANVAS_H * 0.6; // Canvas ka 60% height image ke liye
+        
         const scaleX = CANVAS_W / img.width;
-        const scaleY = CANVAS_H / img.height;
-        const scale = Math.min(scaleX, scaleY);
+        const scaleY = maxImageHeight / img.height;
+        const scale = Math.min(scaleX, scaleY); // Proper aspect ratio maintain
 
         img.set({
           left: 0,
           top: 0,
-          scaleX: scaleX,
-          scaleY: scaleY,
+          scaleX: scale,
+          scaleY: scale,
           selectable: true,
           evented: true,
           name: 'background',
           id: 'background',
         });
 
+        // Image ko center align karna horizontally
+        const scaledWidth = img.width * scale;
+        img.set('left', (CANVAS_W - scaledWidth) / 2);
+
         fabricCanvas.insertAt(img, 0);
         bgImage = img;
         fabricCanvas.renderAll();
-        setStatus('Image loaded. Logo placed automatically.');
+        addSeparatorLine(); // Visual guide line add karna
+        setStatus('Image loaded in upper area. Text area reserved below.');
         placeLogo();
         applyBorderIfEnabled();
       }, { crossOrigin: 'anonymous' });
@@ -256,13 +291,31 @@
   }
 
   /* ── Add Text ─────────────────────────────────────────── */
-  document.getElementById('addTextBtn').addEventListener('click', () => {
-    const txt = new fabric.Textbox('Type here…', {
+  // Add bottom text positioning function
+  function addTextAtBottom() {
+    // Text ka position image ke neeche reserved area mein
+    let textPosition = CANVAS_H * 0.7; // Canvas ke 70% position par text start
+    
+    if (bgImage) {
+      const imgBottom = bgImage.top + (bgImage.height * bgImage.scaleY);
+      textPosition = Math.max(imgBottom + 40, CANVAS_H * 0.65); // Image ke neeche ya reserved area mein
+    }
+    
+    // Ensure text stays in bottom area
+    if (textPosition < CANVAS_H * 0.6) {
+      textPosition = CANVAS_H * 0.7;
+    }
+    
+    return textPosition;
+  }
+
+  document.getElementById('addTextBtn').addEventListener('click', () => {    
+    const txt = new fabric.Textbox('آپ کا متن یہاں لکھیں...', {
       left: CANVAS_W / 2,
-      top: CANVAS_H / 2,
+      top: addTextAtBottom(),
       originX: 'center',
       originY: 'center',
-      width: CANVAS_W * 0.7,
+      width: CANVAS_W * 0.9, // Thoda zyada width bottom ke liye
       fontFamily: document.getElementById('fontFamily').value,
       fontSize: parseInt(document.getElementById('fontSize').value),
       fill: document.getElementById('textColor').value,
@@ -273,6 +326,7 @@
       lineHeight: parseFloat(document.getElementById('lineHeight').value),
       charSpacing: parseInt(document.getElementById('charSpacing').value),
       opacity: parseInt(document.getElementById('textOpacity').value) / 100,
+      backgroundColor: document.getElementById('textBgToggle').checked ? document.getElementById('textBgColor').value : '',
       selectable: true,
       editable: true,
       name: 'text',
@@ -285,7 +339,7 @@
     if (logoObj) fabricCanvas.bringToFront(logoObj);
     fabricCanvas.renderAll();
     txt.enterEditing();
-    setStatus('Text box added. Double-click to edit.');
+    setStatus('Text box added at bottom. Double-click to edit.');
   });
 
   function getActiveAlign() {
@@ -378,6 +432,60 @@
     saveState();
   });
 
+  // Full width background toggle
+  document.getElementById('fullBgToggle').addEventListener('change', function () {
+    const bgPaddingGroup = document.getElementById('bgPaddingGroup');
+    bgPaddingGroup.style.display = this.checked ? 'block' : 'none';
+    applyFullWidthBackground();
+    saveState();
+  });
+
+  // Background padding
+  document.getElementById('bgPadding').addEventListener('input', function () {
+    document.getElementById('bgPaddingVal').textContent = this.value;
+    if (document.getElementById('fullBgToggle').checked) {
+      applyFullWidthBackground();
+    }
+  });
+  document.getElementById('bgPadding').addEventListener('change', saveState);
+
+  function applyFullWidthBackground() {
+    // Remove existing full background if any
+    const existingBg = fabricCanvas.getObjects().find(obj => obj.name === 'fullTextBackground');
+    if (existingBg) {
+      fabricCanvas.remove(existingBg);
+    }
+
+    const txt = getActiveText();
+    if (!txt || !document.getElementById('fullBgToggle').checked) return;
+
+    const padding = parseInt(document.getElementById('bgPadding').value);
+    const bgColor = document.getElementById('textBgColor').value;
+
+    // Text area ke liye reserved bottom portion mein full width background
+    const textAreaStart = CANVAS_H * 0.6; // Canvas ke 60% ke baad text area
+    
+    // Create full width background rectangle for text area
+    const bgRect = new fabric.Rect({
+      left: 0,
+      top: Math.max(txt.top - (txt.height * txt.scaleY / 2) - padding, textAreaStart),
+      width: CANVAS_W,
+      height: Math.min((txt.height * txt.scaleY) + (padding * 2), CANVAS_H - textAreaStart),
+      fill: bgColor,
+      selectable: false,
+      evented: false,
+      name: 'fullTextBackground',
+      id: 'fullTextBackground'
+    });
+
+    // Remove text's individual background when full bg is active
+    txt.set('backgroundColor', '');
+
+    fabricCanvas.add(bgRect);
+    fabricCanvas.moveTo(bgRect, fabricCanvas.getObjects().indexOf(txt));
+    fabricCanvas.renderAll();
+  }
+
   // Alignment
   ['alignLeft', 'alignCenter', 'alignRight'].forEach((id) => {
     document.getElementById(id).addEventListener('click', function () {
@@ -457,9 +565,15 @@
       ['alignLeft', 'alignCenter', 'alignRight'].forEach((id) => document.getElementById(id).classList.remove('active'));
       const alignMap = { left: 'alignLeft', center: 'alignCenter', right: 'alignRight' };
       if (alignMap[obj.textAlign]) document.getElementById(alignMap[obj.textAlign]).classList.add('active');
-      if (obj.backgroundColor) {
+      
+      // Check if full width background exists for this text
+      const hasFullBg = fabricCanvas.getObjects().some(o => o.name === 'fullTextBackground');
+      document.getElementById('fullBgToggle').checked = hasFullBg;
+      document.getElementById('bgPaddingGroup').style.display = hasFullBg ? 'block' : 'none';
+      
+      if (obj.backgroundColor && !hasFullBg) {
         document.getElementById('textBgToggle').checked = true;
-        document.getElementById('textBgColor').value = rgbToHex(obj.backgroundColor) || '#000000';
+        document.getElementById('textBgColor').value = rgbToHex(obj.backgroundColor) || '#ff0000';
       } else {
         document.getElementById('textBgToggle').checked = false;
       }
@@ -485,6 +599,13 @@
     if (obj.id === 'background') { setStatus('Cannot delete the background image.'); return; }
     if (obj.id === 'logo') { logoObj = null; }
     if (obj.id === 'border') { borderRect = null; borderToggle.checked = false; borderControlsWrapper.style.display = 'none'; }
+    
+    // Remove associated full width background if deleting text
+    if (obj.type === 'i-text' || obj.type === 'textbox') {
+      const fullBg = fabricCanvas.getObjects().find(o => o.name === 'fullTextBackground');
+      if (fullBg) fabricCanvas.remove(fullBg);
+    }
+    
     fabricCanvas.remove(obj);
     fabricCanvas.renderAll();
     setStatus('Object deleted.');

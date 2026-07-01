@@ -246,7 +246,7 @@
             </div>
           </div>
 
-          <!-- Text Color -->
+          <!-- Text Color & Background -->
           <div class="color-pair">
             <div class="form-group">
               <label>Text Color</label>
@@ -254,7 +254,7 @@
             </div>
             <div class="form-group">
               <label>Background</label>
-              <input type="color" class="form-control" id="textBgColor" value="#000000" />
+              <input type="color" class="form-control" id="textBgColor" value="#ff0000" />
             </div>
           </div>
           <div class="toggle-wrap">
@@ -263,6 +263,17 @@
               <input type="checkbox" id="textBgToggle" />
               <div class="toggle-track"></div>
             </label>
+          </div>
+          <div class="toggle-wrap">
+            <label for="fullBgToggle">Full Width Background</label>
+            <label class="toggle">
+              <input type="checkbox" id="fullBgToggle" />
+              <div class="toggle-track"></div>
+            </label>
+          </div>
+          <div class="form-group" id="bgPaddingGroup" style="display:none;">
+            <label>Background Padding: <span id="bgPaddingVal">20</span>px</label>
+            <input type="range" class="form-control" id="bgPadding" min="5" max="50" value="20" />
           </div>
 
           <!-- Line height -->
