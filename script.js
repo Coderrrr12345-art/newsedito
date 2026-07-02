@@ -316,7 +316,7 @@
       originX: 'center',
       originY: 'center',
       width: CANVAS_W * 0.9, // Thoda zyada width bottom ke liye
-      fontFamily: document.getElementById('fontFamily').value,
+      fontFamily: "'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', Arial, sans-serif", // Default Jameel font
       fontSize: parseInt(document.getElementById('fontSize').value),
       fill: document.getElementById('textColor').value,
       fontWeight: document.getElementById('boldBtn').classList.contains('active') ? 'bold' : 'normal',
@@ -551,7 +551,7 @@
     if (!obj) return;
     if (obj.type === 'i-text' || obj.type === 'textbox') {
       document.getElementById('fontSize').value = Math.round(obj.fontSize) || 36;
-      document.getElementById('fontFamily').value = obj.fontFamily || 'Inter, Arial, sans-serif';
+      document.getElementById('fontFamily').value = obj.fontFamily || "'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', Arial, sans-serif";
       document.getElementById('textColor').value = obj.fill || '#ffffff';
       document.getElementById('textOpacity').value = Math.round((obj.opacity || 1) * 100);
       document.getElementById('textOpacityVal').textContent = Math.round((obj.opacity || 1) * 100);
