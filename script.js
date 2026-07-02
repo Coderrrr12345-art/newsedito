@@ -651,19 +651,29 @@
     fabricCanvas.discardActiveObject();
     fabricCanvas.renderAll();
 
-    const dataURL = fabricCanvas.toDataURL({
-      format: format,
-      quality: quality,
-      multiplier: 1,
-    });
+    // White background ke liye canvas background color set karna
+    const originalBgColor = fabricCanvas.backgroundColor;
+    fabricCanvas.setBackgroundColor('#ffffff', fabricCanvas.renderAll.bind(fabricCanvas));
 
-    const link = document.createElement('a');
-    link.href = dataURL;
-    link.download = 'newsframe-thumbnail.' + (format === 'jpeg' ? 'jpg' : 'png');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setStatus('Image downloaded as ' + link.download);
+    // Wait for background to render then export
+    setTimeout(() => {
+      const dataURL = fabricCanvas.toDataURL({
+        format: format,
+        quality: quality,
+        multiplier: 1,
+      });
+
+      // Restore original background (transparent) after export
+      fabricCanvas.setBackgroundColor(originalBgColor || 'transparent', fabricCanvas.renderAll.bind(fabricCanvas));
+
+      const link = document.createElement('a');
+      link.href = dataURL;
+      link.download = 'newsframe-thumbnail.' + (format === 'jpeg' ? 'jpg' : 'png');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setStatus('Image downloaded with white background as ' + link.download);
+    }, 100);
   });
 
   /* ── Helpers ──────────────────────────────────────────── */
