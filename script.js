@@ -88,6 +88,44 @@
     saveState();
   });
   fabricCanvas.on('object:removed', saveState);
+  
+  // Update background when text editing ends
+  fabricCanvas.on('text:changed', () => {
+    // Constrain text within canvas bounds
+    const txt = fabricCanvas.getActiveObject();
+    if (txt && (txt.type === 'i-text' || txt.type === 'textbox')) {
+      const bbox = txt.getBoundingRect(true);
+      let adjusted = false;
+      
+      // Check for left overflow
+      if (bbox.left < 0) {
+        txt.set('left', txt.left + Math.abs(bbox.left) + 2);
+        adjusted = true;
+      }
+      
+      // Check for right overflow
+      if (bbox.left + bbox.width > CANVAS_W) {
+        txt.set('left', txt.left - (bbox.left + bbox.width - CANVAS_W + 2));
+        adjusted = true;
+      }
+      
+      // Check for top overflow
+      if (bbox.top < 0) {
+        txt.set('top', txt.top + Math.abs(bbox.top) + 2);
+        adjusted = true;
+      }
+      
+      // Check for bottom overflow
+      if (bbox.top + bbox.height > CANVAS_H) {
+        txt.set('top', txt.top - (bbox.top + bbox.height - CANVAS_H + 2));
+        adjusted = true;
+      }
+      
+      if (adjusted) {
+        fabricCanvas.renderAll();
+      }
+    }
+  });
 
   /* ── Globals ──────────────────────────────────────────── */
   let bgImage = null;
@@ -102,10 +140,11 @@
       fabricCanvas.remove(separatorLine);
     }
     
+    // Line exactly at 60% to mark safe boundary
     const line = new fabric.Line([0, CANVAS_H * 0.6, CANVAS_W, CANVAS_H * 0.6], {
-      stroke: 'rgba(255,255,255,0.2)',
-      strokeWidth: 1,
-      strokeDashArray: [5, 5],
+      stroke: 'rgba(255,255,255,0.15)',
+      strokeWidth: 2,
+      strokeDashArray: [8, 4],
       selectable: false,
       evented: false,
       name: 'separator',
@@ -113,6 +152,7 @@
     });
     
     fabricCanvas.add(line);
+    fabricCanvas.sendToBack(line);
     separatorLine = line;
   }
 
@@ -293,29 +333,29 @@
   /* ── Add Text ─────────────────────────────────────────── */
   // Add bottom text positioning function
   function addTextAtBottom() {
-    // Text ka position image ke neeche reserved area mein
-    let textPosition = CANVAS_H * 0.7; // Canvas ke 70% position par text start
+    // Text ka position STRICTLY text area mein (60% ke baad)
+    const textAreaStart = CANVAS_H * 0.62; // 62% se start karo safe ke liye
+    let textPosition = textAreaStart + 40; // Extra margin
     
     if (bgImage) {
       const imgBottom = bgImage.top + (bgImage.height * bgImage.scaleY);
-      textPosition = Math.max(imgBottom + 40, CANVAS_H * 0.65); // Image ke neeche ya reserved area mein
+      // Ensure minimum distance from image
+      textPosition = Math.max(imgBottom + 60, textAreaStart + 40);
     }
     
-    // Ensure text stays in bottom area
-    if (textPosition < CANVAS_H * 0.6) {
-      textPosition = CANVAS_H * 0.7;
-    }
+    // Ensure text NEVER goes above 60% mark
+    textPosition = Math.max(textPosition, CANVAS_H * 0.62);
     
     return textPosition;
   }
 
   document.getElementById('addTextBtn').addEventListener('click', () => {    
-    const txt = new fabric.Textbox('آپ کا متن یہاں لکھیں...', {
+    const txt = new fabric.Textbox('\nآپ کا متن یہاں لکھیں...', {
       left: CANVAS_W / 2,
       top: addTextAtBottom(),
       originX: 'center',
       originY: 'center',
-      width: CANVAS_W * 0.9, // Thoda zyada width bottom ke liye
+      width: CANVAS_W - 40, // Full width minus padding so text stays inside
       fontFamily: "'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', Arial, sans-serif", // Default Jameel font
       fontSize: parseInt(document.getElementById('fontSize').value),
       fill: document.getElementById('textColor').value,
@@ -323,13 +363,15 @@
       fontStyle: document.getElementById('italicBtn').classList.contains('active') ? 'italic' : 'normal',
       underline: document.getElementById('underlineBtn').classList.contains('active'),
       textAlign: getActiveAlign(),
-      lineHeight: parseFloat(document.getElementById('lineHeight').value),
-      charSpacing: parseInt(document.getElementById('charSpacing').value),
+      lineHeight: 1.4, // Better line height for Urdu fonts
       opacity: parseInt(document.getElementById('textOpacity').value) / 100,
       backgroundColor: document.getElementById('textBgToggle').checked ? document.getElementById('textBgColor').value : '',
       selectable: true,
       editable: true,
       name: 'text',
+      breakWords: true,
+      // Extra padding for Urdu characters
+      padding: 8
     });
 
     fabricCanvas.add(txt);
@@ -338,8 +380,19 @@
     if (borderRect) fabricCanvas.bringToFront(borderRect);
     if (logoObj) fabricCanvas.bringToFront(logoObj);
     fabricCanvas.renderAll();
+    
+    // Auto-add line break function for pasted text
+    txt.on('changed', function() {
+      const currentText = txt.text;
+      // If text doesn't start with newline, add one
+      if (currentText && !currentText.startsWith('\n') && !currentText.startsWith(' \n')) {
+        txt.text = '\n' + currentText;
+        fabricCanvas.renderAll();
+      }
+    });
+    
     txt.enterEditing();
-    setStatus('Text box added at bottom. Double-click to edit.');
+    setStatus('Text box added at bottom with auto line break. Double-click to edit.');
   });
 
   function getActiveAlign() {
@@ -412,8 +465,6 @@
     applyTextProp('fill', this.value);
   });
   document.getElementById('textColor').addEventListener('change', saveState);
-
-  // Text background
   document.getElementById('textBgColor').addEventListener('input', function () {
     const txt = getActiveText();
     if (!txt) return;
@@ -462,20 +513,47 @@
     const padding = parseInt(document.getElementById('bgPadding').value);
     const bgColor = document.getElementById('textBgColor').value;
 
-    // Text area ke liye reserved bottom portion mein full width background
-    const textAreaStart = CANVAS_H * 0.6; // Canvas ke 60% ke baad text area
+    // Force canvas to render to get accurate bounds
+    fabricCanvas.renderAll();
     
-    // Create full width background rectangle for text area
+    // Get EXACT text boundaries (this accounts for the empty first line)
+    const textBounds = txt.getBoundingRect(true, true);
+    
+    // Urdu fonts ke liye calculated extra space
+    const isUrduFont = txt.fontFamily.includes('Jameel') || txt.fontFamily.includes('Nastaliq') || txt.fontFamily.includes('Noto');
+    
+    // Reduced padding since we have empty first line as buffer
+    const extraTopPadding = isUrduFont ? Math.max(txt.fontSize * 0.1, 5) : 3; // Much less needed now
+    const extraBottomPadding = isUrduFont ? Math.max(txt.fontSize * 0.15, 10) : 5;
+    
+    // Calculate background dimensions with first line buffer
+    const bgTop = textBounds.top - padding - extraTopPadding;
+    const bgHeight = textBounds.height + (padding * 2) + extraTopPadding + extraBottomPadding;
+    
+    // STRICT bounds check - background should NEVER exceed text area
+    const maxTop = Math.max(bgTop, CANVAS_H * 0.58); // Text area starts at 58%
+    const maxHeight = Math.min(bgHeight, CANVAS_H - maxTop - 10); // 10px bottom margin
+    
+    // Create CONTAINED full width background rectangle
     const bgRect = new fabric.Rect({
       left: 0,
-      top: Math.max(txt.top - (txt.height * txt.scaleY / 2) - padding, textAreaStart),
+      top: maxTop,
       width: CANVAS_W,
-      height: Math.min((txt.height * txt.scaleY) + (padding * 2), CANVAS_H - textAreaStart),
+      height: maxHeight,
       fill: bgColor,
       selectable: false,
       evented: false,
       name: 'fullTextBackground',
-      id: 'fullTextBackground'
+      id: 'fullTextBackground',
+      opacity: 1,
+      // Ensure it stays within bounds
+      clipPath: new fabric.Rect({
+        left: 0,
+        top: CANVAS_H * 0.58,
+        width: CANVAS_W,
+        height: CANVAS_H * 0.42,
+        absolutePositioned: true
+      })
     });
 
     // Remove text's individual background when full bg is active
@@ -483,6 +561,10 @@
 
     fabricCanvas.add(bgRect);
     fabricCanvas.moveTo(bgRect, fabricCanvas.getObjects().indexOf(txt));
+    
+    // Ensure text is on top of background
+    fabricCanvas.bringToFront(txt);
+    
     fabricCanvas.renderAll();
   }
 
@@ -504,13 +586,6 @@
     applyTextProp('lineHeight', parseFloat(this.value));
   });
   document.getElementById('lineHeight').addEventListener('change', saveState);
-
-  // Char spacing
-  document.getElementById('charSpacing').addEventListener('input', function () {
-    document.getElementById('charSpacingVal').textContent = this.value;
-    applyTextProp('charSpacing', parseInt(this.value));
-  });
-  document.getElementById('charSpacing').addEventListener('change', saveState);
 
   // Text opacity
   document.getElementById('textOpacity').addEventListener('input', function () {
@@ -557,8 +632,6 @@
       document.getElementById('textOpacityVal').textContent = Math.round((obj.opacity || 1) * 100);
       document.getElementById('lineHeight').value = obj.lineHeight || 1.2;
       document.getElementById('lineHeightVal').textContent = (obj.lineHeight || 1.2).toFixed(1);
-      document.getElementById('charSpacing').value = obj.charSpacing || 0;
-      document.getElementById('charSpacingVal').textContent = obj.charSpacing || 0;
       document.getElementById('boldBtn').classList.toggle('active', obj.fontWeight === 'bold');
       document.getElementById('italicBtn').classList.toggle('active', obj.fontStyle === 'italic');
       document.getElementById('underlineBtn').classList.toggle('active', !!obj.underline);
@@ -651,29 +724,73 @@
     fabricCanvas.discardActiveObject();
     fabricCanvas.renderAll();
 
-    // White background ke liye canvas background color set karna
-    const originalBgColor = fabricCanvas.backgroundColor;
-    fabricCanvas.setBackgroundColor('#ffffff', fabricCanvas.renderAll.bind(fabricCanvas));
+    // Calculate actual bounds of all content
+    let minTop = CANVAS_H;
+    let minLeft = CANVAS_W;
+    let maxBottom = 0;
+    let maxRight = 0;
+    
+    fabricCanvas.getObjects().forEach(obj => {
+      const bbox = obj.getBoundingRect(true);
+      minTop = Math.min(minTop, bbox.top);
+      minLeft = Math.min(minLeft, bbox.left);
+      maxBottom = Math.max(maxBottom, bbox.top + bbox.height);
+      maxRight = Math.max(maxRight, bbox.left + bbox.width);
+    });
 
-    // Wait for background to render then export
-    setTimeout(() => {
-      const dataURL = fabricCanvas.toDataURL({
+    // Add margin and ensure within bounds
+    const margin = 15;
+    const top = Math.max(0, minTop - margin);
+    const left = Math.max(0, minLeft - margin);
+    const exportHeight = Math.min(maxBottom + margin - top, CANVAS_H - top);
+    const exportWidth = Math.min(maxRight + margin - left, CANVAS_W - left);
+
+    // Set temporary canvas position to offset all objects
+    const originalData = fabricCanvas.toJSON(['selectable', 'evented', 'name', 'id']);
+    
+    // Create temporary canvas for export
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = exportWidth;
+    tempCanvas.height = exportHeight;
+    
+    const tempFabricCanvas = new fabric.Canvas(tempCanvas, {
+      width: exportWidth,
+      height: exportHeight,
+    });
+    
+    tempFabricCanvas.setBackgroundColor('#ffffff');
+
+    // Load objects and adjust positions
+    tempFabricCanvas.loadFromJSON(originalData, () => {
+      // Offset all objects by the crop position
+      tempFabricCanvas.getObjects().forEach(obj => {
+        obj.set({
+          left: obj.left - left,
+          top: obj.top - top
+        });
+      });
+      
+      tempFabricCanvas.renderAll();
+
+      // Export
+      const dataURL = tempFabricCanvas.toDataURL({
         format: format,
         quality: quality,
         multiplier: 1,
       });
 
-      // Restore original background (transparent) after export
-      fabricCanvas.setBackgroundColor(originalBgColor || 'transparent', fabricCanvas.renderAll.bind(fabricCanvas));
+      // Cleanup
+      tempFabricCanvas.dispose();
 
+      // Download
       const link = document.createElement('a');
       link.href = dataURL;
-      link.download = 'newsframe-thumbnail.' + (format === 'jpeg' ? 'jpg' : 'png');
+      link.download = 'newsframe-' + Date.now() + '.' + (format === 'jpeg' ? 'jpg' : 'png');
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      setStatus('Image downloaded with white background as ' + link.download);
-    }, 100);
+      setStatus('Image downloaded (' + exportWidth + '×' + exportHeight + 'px)');
+    });
   });
 
   /* ── Helpers ──────────────────────────────────────────── */
