@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NewsFrame — Login</title>
+  <link rel="icon" href="/vite.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="style.css" />
+  <!-- Google Fonts preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <style>
+    .login-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--navy-950) 0%, var(--navy-800) 60%, var(--navy-700) 100%);
+      padding: 20px;
+    }
+    
+    .login-card {
+      background: var(--navy-800);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius-xl);
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.6);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent), #d97706, var(--accent));
+    }
+    
+    .login-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    .login-brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      font-family: var(--font-head);
+      font-size: 1.75rem;
+      font-weight: 900;
+      color: var(--white);
+      letter-spacing: -.5px;
+      margin-bottom: 8px;
+    }
+    
+    .login-brand .brand-dot {
+      width: 12px;
+      height: 12px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+    
+    .login-subtitle {
+      color: var(--gray-400);
+      font-size: .9rem;
+      margin: 0;
+    }
+    
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    
+    .form-field {
+      position: relative;
+    }
+    
+    .form-field label {
+      display: block;
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--gray-400);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    
+    .form-field input {
+      width: 100%;
+      background: rgba(0,0,0,.4);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: var(--radius);
+      color: var(--white);
+      padding: 14px 16px;
+      font-size: .95rem;
+      transition: all var(--transition);
+      font-family: inherit;
+    }
+    
+    .form-field input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(245,158,11,.15);
+      background: rgba(0,0,0,.6);
+    }
+    
+    .form-field input::placeholder {
+      color: var(--gray-600);
+    }
+    
+    .login-btn {
+      background: var(--accent);
+      color: var(--navy-950);
+      border: none;
+      border-radius: var(--radius);
+      padding: 14px;
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all var(--transition);
+      margin-top: 8px;
+      box-shadow: 0 4px 16px rgba(245,158,11,.3);
+    }
+    
+    .login-btn:hover {
+      background: #d97706;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(245,158,11,.4);
+    }
+    
+    .login-btn:active {
+      transform: translateY(0);
+    }
+    
+    .login-btn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .error-message {
+      background: rgba(239,68,68,.15);
+      border: 1px solid rgba(239,68,68,.3);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      color: #fca5a5;
+      font-size: .85rem;
+      text-align: center;
+      display: none;
+      margin-top: 1rem;
+    }
+    
+    .success-message {
+      background: rgba(16,185,129,.15);
+      border: 1px solid rgba(16,185,129,.3);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      color: #6ee7b7;
+      font-size: .85rem;
+      text-align: center;
+      display: none;
+      margin-top: 1rem;
+    }
+    
+    .login-footer {
+      text-align: center;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,.1);
+    }
+    
+    .login-footer p {
+      color: var(--gray-500);
+      font-size: .8rem;
+      margin: 0;
+    }
+    
+    /* Loading animation */
+    .loading {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--navy-950);
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .login-card {
+        padding: 2rem 1.5rem;
+        margin: 10px;
+        max-width: calc(100vw - 20px);
+      }
+      
+      .login-brand {
+        font-size: 1.5rem;
+      }
+      
+      .form-field input, .login-btn {
+        padding: 12px 14px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 10px;
+      }
+      
+      .login-card {
+        padding: 1.5rem 1rem;
+        border-radius: var(--radius-lg);
+      }
+      
+      .login-brand {
+        font-size: 1.3rem;
+        gap: 8px;
+      }
+      
+      .login-brand .brand-dot {
+        width: 10px;
+        height: 10px;
+      }
+      
+      .form-field input, .login-btn {
+        padding: 11px 12px;
+        font-size: .9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-brand">
+        <span class="brand-dot"></span>
+        NewsFrame
+      </div>
+      <p class="login-subtitle">Professional News Thumbnail Editor</p>
+    </div>
+    
+    <form class="login-form" id="loginForm">
+      <div class="form-field">
+        <label for="email">Email Address</label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email" 
+          placeholder="Enter your email"
+          required
+          autocomplete="email"
+        />
+      </div>
+      
+      <div class="form-field">
+        <label for="password">Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password" 
+          placeholder="Enter your password"
+          required
+          autocomplete="current-password"
+        />
+      </div>
+      
+      <button type="submit" class="login-btn" id="loginBtn">
+        <span id="loginBtnText">Sign In</span>
+        <span id="loginBtnLoading" class="loading" style="display: none;"></span>
+      </button>
+      
+      <div class="error-message" id="errorMessage"></div>
+      <div class="success-message" id="successMessage"></div>
+    </form>
+    
+    <div class="login-footer">
+      <p>&copy; 2024 NewsFrame &mdash; Secure Access Portal</p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+  
+  // Login credentials
+  const VALID_EMAIL = 'newseditor@gmail.com';
+  const VALID_PASSWORD = 'news123456';
+  
+  // Elements
+  const loginForm = document.getElementById('loginForm');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const loginBtn = document.getElementById('loginBtn');
+  const loginBtnText = document.getElementById('loginBtnText');
+  const loginBtnLoading = document.getElementById('loginBtnLoading');
+  const errorMessage = document.getElementById('errorMessage');
+  const successMessage = document.getElementById('successMessage');
+  
+  // Check if already logged in
+  if (sessionStorage.getItem('newsframe_logged_in') === 'true') {
+    window.location.href = 'index.html';
+  }
+  
+  // Functions
+  function showError(message) {
+    errorMessage.textContent = message;
+    errorMessage.style.display = 'block';
+    successMessage.style.display = 'none';
+  }
+  
+  function showSuccess(message) {
+    successMessage.textContent = message;
+    successMessage.style.display = 'block';
+    errorMessage.style.display = 'none';
+  }
+  
+  function hideMessages() {
+    errorMessage.style.display = 'none';
+    successMessage.style.display = 'none';
+  }
+  
+  function setLoading(loading) {
+    loginBtn.disabled = loading;
+    if (loading) {
+      loginBtnText.style.display = 'none';
+      loginBtnLoading.style.display = 'inline-block';
+    } else {
+      loginBtnText.style.display = 'inline';
+      loginBtnLoading.style.display = 'none';
+    }
+  }
+  
+  function validateLogin(email, password) {
+    return email === VALID_EMAIL && password === VALID_PASSWORD;
+  }
+  
+  function performLogin() {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    
+    hideMessages();
+    
+    // Validation
+    if (!email || !password) {
+      showError('Please enter both email and password.');
+      return;
+    }
+    
+    if (!email.includes('@')) {
+      showError('Please enter a valid email address.');
+      return;
+    }
+    
+    setLoading(true);
+    
+    // Simulate API call delay for better UX
+    setTimeout(() => {
+      if (validateLogin(email, password)) {
+        showSuccess('Login successful! Redirecting...');
+        sessionStorage.setItem('newsframe_logged_in', 'true');
+        sessionStorage.setItem('newsframe_user_email', email);
+        
+        // Redirect after success message
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 1500);
+      } else {
+        showError('Invalid email or password. Please try again.');
+        setLoading(false);
+      }
+    }, 1000);
+  }
+  
+  // Event listeners
+  loginForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    performLogin();
+  });
+  
+  // Enter key support
+  emailInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      passwordInput.focus();
+    }
+  });
+  
+  passwordInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      performLogin();
+    }
+  });
+  
+  // Clear messages on input
+  emailInput.addEventListener('input', hideMessages);
+  passwordInput.addEventListener('input', hideMessages);
+  
+})();
+</script>
+
+</body>
+</html>

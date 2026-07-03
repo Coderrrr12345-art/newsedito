@@ -171,6 +171,11 @@
     form.style.display = 'none';
     successPanel.style.display = 'block';
   });
+  
+  // Login check
+  if (sessionStorage.getItem('newsframe_logged_in') !== 'true') {
+    window.location.href = 'login.html';
+  }
 </script>
 </body>
 </html>

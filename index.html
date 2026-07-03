@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+  <meta name="theme-color" content="#0d1b35" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>NewsFrame — Thumbnail Editor</title>
   <link rel="icon" href="/vite.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="style.css" />
@@ -27,6 +31,24 @@
       font-family: 'Jameel Noori Nastaleeq Kasheeda';
       src: url('https://cdn.jsdelivr.net/gh/noorka/JameelNooriNastaleeq@main/JameelNooriNastaleeqKasheeda.woff2') format('woff2'),
            url('https://cdn.jsdelivr.net/gh/noorka/JameelNooriNastaleeq@main/JameelNooriNastaleeqKasheeda.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+    
+    @font-face {
+      font-family: 'Mehr Nastaliq';
+      src: url('https://cdn.jsdelivr.net/gh/font-store/MehrNastaliq@main/MehrNastaliqWeb.woff2') format('woff2'),
+           url('https://cdn.jsdelivr.net/gh/font-store/MehrNastaliq@main/MehrNastaliqWeb.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+    
+    @font-face {
+      font-family: 'Mehr Noori Nastaliq';
+      src: url('https://cdn.jsdelivr.net/gh/urdufont/MehrNooriNastaliq@main/MehrNooriNastaliq.woff2') format('woff2'),
+           url('https://cdn.jsdelivr.net/gh/urdufont/MehrNooriNastaliq@main/MehrNooriNastaliq.woff') format('woff');
       font-weight: normal;
       font-style: normal;
       font-display: swap;
@@ -221,6 +243,8 @@
             <label>Font Family</label>
             <select class="form-control" id="fontFamily">
               <option value="'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', Arial, sans-serif">Jameel Noori Nastaleeq</option>
+              <option value="'Mehr Noori Nastaliq', 'Noto Nastaliq Urdu', Arial, sans-serif">Mehr Noori Nastaliq</option>
+              <option value="'Mehr Nastaliq', 'Noto Nastaliq Urdu', Arial, sans-serif">Mehr Nastaliq</option>
               <option value="'Jameel Noori Nastaleeq Kasheeda', 'Noto Nastaliq Urdu', Arial, sans-serif">Jameel Noori Kasheeda</option>
               <option value="'Noto Nastaliq Urdu', Arial, sans-serif">Noto Nastaliq Urdu</option>
               <option value="Inter, Arial, sans-serif">Inter</option>
@@ -332,5 +356,35 @@
 </footer>
 
 <script type="module" src="/script.js"></script>
+
+<!-- Login Check Script -->
+<script>
+(function() {
+  'use strict';
+  
+  // Check if user is logged in
+  if (sessionStorage.getItem('newsframe_logged_in') !== 'true') {
+    window.location.href = 'login.html';
+    return;
+  }
+  
+  // Add logout functionality to navbar
+  const navLinks = document.querySelector('.nav-links');
+  if (navLinks) {
+    const logoutLi = document.createElement('li');
+    logoutLi.innerHTML = '<a href="#" id="logoutBtn" style="color: #f59e0b;">Logout</a>';
+    navLinks.appendChild(logoutLi);
+    
+    document.getElementById('logoutBtn').addEventListener('click', function(e) {
+      e.preventDefault();
+      if (confirm('Are you sure you want to logout?')) {
+        sessionStorage.removeItem('newsframe_logged_in');
+        sessionStorage.removeItem('newsframe_user_email');
+        window.location.href = 'login.html';
+      }
+    });
+  }
+})();
+</script>
 </body>
 </html>
