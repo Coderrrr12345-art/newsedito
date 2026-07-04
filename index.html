@@ -16,7 +16,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <!-- Jameel Noori Nastaleeq2 Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Google Fonts - Noto Nastaliq Urdu -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
   <style>
     @font-face {
       font-family: 'Jameel Noori Nastaleeq';
@@ -28,27 +30,9 @@
     }
     
     @font-face {
-      font-family: 'Jameel Noori Nastaleeq Kasheeda';
+      font-family: 'Jameel Noori Kasheeda';
       src: url('https://cdn.jsdelivr.net/gh/noorka/JameelNooriNastaleeq@main/JameelNooriNastaleeqKasheeda.woff2') format('woff2'),
            url('https://cdn.jsdelivr.net/gh/noorka/JameelNooriNastaleeq@main/JameelNooriNastaleeqKasheeda.woff') format('woff');
-      font-weight: normal;
-      font-style: normal;
-      font-display: swap;
-    }
-    
-    @font-face {
-      font-family: 'Mehr Nastaliq';
-      src: url('https://cdn.jsdelivr.net/gh/font-store/MehrNastaliq@main/MehrNastaliqWeb.woff2') format('woff2'),
-           url('https://cdn.jsdelivr.net/gh/font-store/MehrNastaliq@main/MehrNastaliqWeb.woff') format('woff');
-      font-weight: normal;
-      font-style: normal;
-      font-display: swap;
-    }
-    
-    @font-face {
-      font-family: 'Mehr Noori Nastaliq';
-      src: url('https://cdn.jsdelivr.net/gh/urdufont/MehrNooriNastaliq@main/MehrNooriNastaliq.woff2') format('woff2'),
-           url('https://cdn.jsdelivr.net/gh/urdufont/MehrNooriNastaliq@main/MehrNooriNastaliq.woff') format('woff');
       font-weight: normal;
       font-style: normal;
       font-display: swap;
@@ -242,11 +226,9 @@
           <div class="form-group">
             <label>Font Family</label>
             <select class="form-control" id="fontFamily">
-              <option value="'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', Arial, sans-serif">Jameel Noori Nastaleeq</option>
-              <option value="'Mehr Noori Nastaliq', 'Noto Nastaliq Urdu', Arial, sans-serif">Mehr Noori Nastaliq</option>
-              <option value="'Mehr Nastaliq', 'Noto Nastaliq Urdu', Arial, sans-serif">Mehr Nastaliq</option>
-              <option value="'Jameel Noori Nastaleeq Kasheeda', 'Noto Nastaliq Urdu', Arial, sans-serif">Jameel Noori Kasheeda</option>
-              <option value="'Noto Nastaliq Urdu', Arial, sans-serif">Noto Nastaliq Urdu</option>
+              <option value="'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', Arial, sans-serif" selected>Jameel Noori Nastaleeq</option>
+              <option value="'Jameel Noori Kasheeda', 'Noto Nastaliq Urdu', Arial, sans-serif">Jameel Noori Kasheeda</option>
+              <option value="'Noto Nastaliq Urdu', serif">Noto Nastaliq Urdu</option>
               <option value="Inter, Arial, sans-serif">Inter</option>
               <option value="'Playfair Display', Georgia, serif">Playfair Display</option>
               <option value="Georgia, serif">Georgia</option>
@@ -272,7 +254,7 @@
             <label>Font Size</label>
             <div class="input-row">
               <button class="btn-icon btn-sm" id="fontSizeDown">−</button>
-              <input type="number" class="form-control" id="fontSize" value="36" min="8" max="200" style="text-align:center;" />
+              <input type="number" class="form-control" id="fontSize" value="30" min="8" max="200" style="text-align:center;" />
               <button class="btn-icon btn-sm" id="fontSizeUp">+</button>
             </div>
           </div>
@@ -287,7 +269,7 @@
               <button class="btn-icon" id="alignCenter" title="Align Center">
                 <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
               </button>
-              <button class="btn-icon" id="alignRight" title="Align Right">
+              <button class="btn-icon active" id="alignRight" title="Align Right">
                 <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="6" y1="18" x2="21" y2="18"/></svg>
               </button>
             </div>
@@ -333,8 +315,8 @@
           <div class="form-group">
             <label>Text Direction</label>
             <div class="toolbar-row">
-              <button class="btn-icon active" id="dirLtr" title="Left to Right (LTR)">LTR</button>
-              <button class="btn-icon" id="dirRtl" title="Right to Left (RTL)">RTL</button>
+              <button class="btn-icon" id="dirLtr" title="Left to Right (LTR)">LTR</button>
+              <button class="btn-icon active" id="dirRtl" title="Right to Left (RTL)">RTL</button>
             </div>
           </div>
 

@@ -88,7 +88,7 @@
     saveState();
   });
   fabricCanvas.on('object:removed', saveState);
-  
+
   // Update background when text editing ends
   fabricCanvas.on('text:changed', () => {
     // Constrain text within canvas bounds
@@ -96,31 +96,31 @@
     if (txt && (txt.type === 'i-text' || txt.type === 'textbox')) {
       const bbox = txt.getBoundingRect(true);
       let adjusted = false;
-      
+
       // Check for left overflow
       if (bbox.left < 0) {
         txt.set('left', txt.left + Math.abs(bbox.left) + 2);
         adjusted = true;
       }
-      
+
       // Check for right overflow
       if (bbox.left + bbox.width > CANVAS_W) {
         txt.set('left', txt.left - (bbox.left + bbox.width - CANVAS_W + 2));
         adjusted = true;
       }
-      
+
       // Check for top overflow
       if (bbox.top < 0) {
         txt.set('top', txt.top + Math.abs(bbox.top) + 2);
         adjusted = true;
       }
-      
+
       // Check for bottom overflow
       if (bbox.top + bbox.height > CANVAS_H) {
         txt.set('top', txt.top - (bbox.top + bbox.height - CANVAS_H + 2));
         adjusted = true;
       }
-      
+
       if (adjusted) {
         fabricCanvas.renderAll();
       }
@@ -139,7 +139,7 @@
     if (separatorLine) {
       fabricCanvas.remove(separatorLine);
     }
-    
+
     // Line exactly at 60% to mark safe boundary
     const line = new fabric.Line([0, CANVAS_H * 0.6, CANVAS_W, CANVAS_H * 0.6], {
       stroke: 'rgba(255,255,255,0.15)',
@@ -150,7 +150,7 @@
       name: 'separator',
       id: 'separator'
     });
-    
+
     fabricCanvas.add(line);
     fabricCanvas.sendToBack(line);
     separatorLine = line;
@@ -190,7 +190,7 @@
 
         // Image ko sirf upper portion mein fit karna
         const maxImageHeight = CANVAS_H * 0.6; // Canvas ka 60% height image ke liye
-        
+
         const scaleX = CANVAS_W / img.width;
         const scaleY = maxImageHeight / img.height;
         const scale = Math.min(scaleX, scaleY); // Proper aspect ratio maintain
@@ -336,33 +336,34 @@
     // Text ka position STRICTLY text area mein (60% ke baad)
     const textAreaStart = CANVAS_H * 0.62; // 62% se start karo safe ke liye
     let textPosition = textAreaStart + 40; // Extra margin
-    
+
     if (bgImage) {
       const imgBottom = bgImage.top + (bgImage.height * bgImage.scaleY);
       // Ensure minimum distance from image
       textPosition = Math.max(imgBottom + 60, textAreaStart + 40);
     }
-    
+
     // Ensure text NEVER goes above 60% mark
     textPosition = Math.max(textPosition, CANVAS_H * 0.62);
-    
+
     return textPosition;
   }
 
-  document.getElementById('addTextBtn').addEventListener('click', () => {    
-    const txt = new fabric.Textbox('\nآپ کا متن یہاں لکھیں...', {
+  document.getElementById('addTextBtn').addEventListener('click', () => {
+    const txt = new fabric.Textbox('\n', {
       left: CANVAS_W / 2,
       top: addTextAtBottom(),
       originX: 'center',
       originY: 'center',
       width: CANVAS_W - 40, // Full width minus padding so text stays inside
       fontFamily: "'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', Arial, sans-serif", // Default Jameel font
-      fontSize: parseInt(document.getElementById('fontSize').value),
+      fontSize: 30, // Default font size 30
       fill: document.getElementById('textColor').value,
       fontWeight: document.getElementById('boldBtn').classList.contains('active') ? 'bold' : 'normal',
       fontStyle: document.getElementById('italicBtn').classList.contains('active') ? 'italic' : 'normal',
       underline: document.getElementById('underlineBtn').classList.contains('active'),
-      textAlign: getActiveAlign(),
+      textAlign: 'right', // Default RTL alignment
+      direction: 'rtl', // Default RTL direction
       lineHeight: 1.4, // Better line height for Urdu fonts
       opacity: parseInt(document.getElementById('textOpacity').value) / 100,
       backgroundColor: document.getElementById('textBgToggle').checked ? document.getElementById('textBgColor').value : '',
@@ -380,9 +381,9 @@
     if (borderRect) fabricCanvas.bringToFront(borderRect);
     if (logoObj) fabricCanvas.bringToFront(logoObj);
     fabricCanvas.renderAll();
-    
+
     // Auto-add line break function for pasted text
-    txt.on('changed', function() {
+    txt.on('changed', function () {
       const currentText = txt.text;
       // If text doesn't start with newline, add one
       if (currentText && !currentText.startsWith('\n') && !currentText.startsWith(' \n')) {
@@ -390,7 +391,7 @@
         fabricCanvas.renderAll();
       }
     });
-    
+
     txt.enterEditing();
     setStatus('Text box added at bottom with auto line break. Double-click to edit.');
   });
@@ -515,25 +516,25 @@
 
     // Force canvas to render to get accurate bounds
     fabricCanvas.renderAll();
-    
+
     // Get EXACT text boundaries (this accounts for the empty first line)
     const textBounds = txt.getBoundingRect(true, true);
-    
+
     // Urdu fonts ke liye calculated extra space
-    const isUrduFont = txt.fontFamily.includes('Jameel') || txt.fontFamily.includes('Nastaliq') || txt.fontFamily.includes('Noto');
-    
+    const isUrduFont = txt.fontFamily.includes('Jameel') || txt.fontFamily.includes('Kasheeda') || txt.fontFamily.includes('Nastaliq') || txt.fontFamily.includes('Noto');
+
     // Reduced padding since we have empty first line as buffer
     const extraTopPadding = isUrduFont ? Math.max(txt.fontSize * 0.1, 5) : 3; // Much less needed now
     const extraBottomPadding = isUrduFont ? Math.max(txt.fontSize * 0.15, 10) : 5;
-    
+
     // Calculate background dimensions with first line buffer
     const bgTop = textBounds.top - padding - extraTopPadding;
     const bgHeight = textBounds.height + (padding * 2) + extraTopPadding + extraBottomPadding;
-    
+
     // STRICT bounds check - background should NEVER exceed text area
     const maxTop = Math.max(bgTop, CANVAS_H * 0.58); // Text area starts at 58%
     const maxHeight = Math.min(bgHeight, CANVAS_H - maxTop - 10); // 10px bottom margin
-    
+
     // Create CONTAINED full width background rectangle
     const bgRect = new fabric.Rect({
       left: 0,
@@ -561,10 +562,10 @@
 
     fabricCanvas.add(bgRect);
     fabricCanvas.moveTo(bgRect, fabricCanvas.getObjects().indexOf(txt));
-    
+
     // Ensure text is on top of background
     fabricCanvas.bringToFront(txt);
-    
+
     fabricCanvas.renderAll();
   }
 
@@ -578,7 +579,7 @@
       saveState();
     });
   });
-  document.getElementById('alignLeft').classList.add('active');
+  document.getElementById('alignRight').classList.add('active'); // Default RTL alignment
 
   // Line height
   document.getElementById('lineHeight').addEventListener('input', function () {
@@ -625,7 +626,7 @@
 
     if (!obj) return;
     if (obj.type === 'i-text' || obj.type === 'textbox') {
-      document.getElementById('fontSize').value = Math.round(obj.fontSize) || 36;
+      document.getElementById('fontSize').value = Math.round(obj.fontSize) || 30;
       document.getElementById('fontFamily').value = obj.fontFamily || "'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', Arial, sans-serif";
       document.getElementById('textColor').value = obj.fill || '#ffffff';
       document.getElementById('textOpacity').value = Math.round((obj.opacity || 1) * 100);
@@ -638,12 +639,12 @@
       ['alignLeft', 'alignCenter', 'alignRight'].forEach((id) => document.getElementById(id).classList.remove('active'));
       const alignMap = { left: 'alignLeft', center: 'alignCenter', right: 'alignRight' };
       if (alignMap[obj.textAlign]) document.getElementById(alignMap[obj.textAlign]).classList.add('active');
-      
+
       // Check if full width background exists for this text
       const hasFullBg = fabricCanvas.getObjects().some(o => o.name === 'fullTextBackground');
       document.getElementById('fullBgToggle').checked = hasFullBg;
       document.getElementById('bgPaddingGroup').style.display = hasFullBg ? 'block' : 'none';
-      
+
       if (obj.backgroundColor && !hasFullBg) {
         document.getElementById('textBgToggle').checked = true;
         document.getElementById('textBgColor').value = rgbToHex(obj.backgroundColor) || '#ff0000';
@@ -672,13 +673,13 @@
     if (obj.id === 'background') { setStatus('Cannot delete the background image.'); return; }
     if (obj.id === 'logo') { logoObj = null; }
     if (obj.id === 'border') { borderRect = null; borderToggle.checked = false; borderControlsWrapper.style.display = 'none'; }
-    
+
     // Remove associated full width background if deleting text
     if (obj.type === 'i-text' || obj.type === 'textbox') {
       const fullBg = fabricCanvas.getObjects().find(o => o.name === 'fullTextBackground');
       if (fullBg) fabricCanvas.remove(fullBg);
     }
-    
+
     fabricCanvas.remove(obj);
     fabricCanvas.renderAll();
     setStatus('Object deleted.');
@@ -729,7 +730,7 @@
     let minLeft = CANVAS_W;
     let maxBottom = 0;
     let maxRight = 0;
-    
+
     fabricCanvas.getObjects().forEach(obj => {
       const bbox = obj.getBoundingRect(true);
       minTop = Math.min(minTop, bbox.top);
@@ -747,17 +748,17 @@
 
     // Set temporary canvas position to offset all objects
     const originalData = fabricCanvas.toJSON(['selectable', 'evented', 'name', 'id']);
-    
+
     // Create temporary canvas for export
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = exportWidth;
     tempCanvas.height = exportHeight;
-    
+
     const tempFabricCanvas = new fabric.Canvas(tempCanvas, {
       width: exportWidth,
       height: exportHeight,
     });
-    
+
     tempFabricCanvas.setBackgroundColor('#ffffff');
 
     // Load objects and adjust positions
@@ -769,7 +770,7 @@
           top: obj.top - top
         });
       });
-      
+
       tempFabricCanvas.renderAll();
 
       // Export
@@ -818,5 +819,9 @@
   updateHistoryButtons();
   saveState();
   scaleCanvas();
+  
+  // Set default RTL state
+  document.getElementById('dirRtl').classList.add('active');
+  document.getElementById('dirLtr').classList.remove('active');
 
 })();
