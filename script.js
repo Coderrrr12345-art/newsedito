@@ -13,28 +13,114 @@
     selection: true,
     preserveObjectStacking: true,
     renderOnAddRemove: true,
+    // Better mobile touch support
+    allowTouchScrolling: false,
+    enableRetinaScaling: true,
+    suppressPressedTextSelection: true,
   });
 
-  // Scale canvas responsively
+  // Improve touch handling on mobile
+  const canvasElement = document.getElementById('mainCanvas');
+  if (canvasElement) {
+    canvasElement.addEventListener('touchmove', (e) => {
+      // Allow smooth touch interactions
+      if (fabricCanvas.getActiveObject() && e.touches.length === 1) {
+        // Touch event will be handled by fabric
+      }
+    }, { passive: true });
+  }
+
+  // Improve paste handling with proper text formatting
+  document.addEventListener('paste', function(e) {
+    // Only handle paste when a text object is being edited
+    const activeObj = fabricCanvas.getActiveObject();
+    if (!activeObj || (activeObj.type !== 'i-text' && activeObj.type !== 'textbox')) {
+      return;
+    }
+    
+    // Let fabric.js handle the paste, but ensure proper formatting
+    if (activeObj.isEditing) {
+      setTimeout(() => {
+        // Ensure newline at start is preserved
+        const currentText = activeObj.text;
+        if (currentText && !currentText.startsWith('\n')) {
+          activeObj.text = '\n' + currentText;
+          fabricCanvas.renderAll();
+        }
+        // Auto-update full width background if enabled
+        if (document.getElementById('fullBgToggle').checked) {
+          setTimeout(applyFullWidthBackground, 100);
+        }
+      }, 50);
+    }
+  });
+
+  // Better mobile keyboard handling
+  document.addEventListener('focus', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+      // Add small delay to ensure keyboard appears before scrolling
+      setTimeout(() => {
+        e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    }
+  }, true);
+
+  // Prevent unwanted zoom on input focus
+  document.addEventListener('touchstart', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+      e.target.style.fontSize = '16px';
+    }
+  }, false);
+
+  // Scale canvas responsively with better mobile support
   function scaleCanvas() {
     const wrap = document.querySelector('.canvas-wrap');
     if (!wrap) return;
-    const available = wrap.clientWidth - 48;
+    
+    // Get available space accounting for mobile
+    const isMobile = window.innerWidth <= 900;
+    const padding = isMobile ? 24 : 48;
+    const available = wrap.clientWidth - padding;
+    
     if (available <= 0) return;
+    
     const scale = Math.min(available / CANVAS_W, 1);
     const container = document.getElementById('canvas-container');
-    container.style.transform = `scale(${scale})`;
-    container.style.transformOrigin = 'top left';
-    // Compensate layout so wrapper shrinks to scaled size
+    
+    // Store scale for CSS use
+    document.documentElement.style.setProperty('--canvas-scale', scale);
+    
+    // Center the canvas properly on mobile
+    if (isMobile) {
+      container.style.transform = `translateX(-50%) scale(${scale})`;
+      container.style.left = '50%';
+      container.style.transformOrigin = 'top center';
+      container.style.position = 'relative';
+    } else {
+      container.style.transform = `scale(${scale})`;
+      container.style.left = '0';
+      container.style.transformOrigin = 'top left';
+      container.style.position = 'relative';
+    }
+    
+    // Adjust wrapper height
     const scaledH = CANVAS_H * scale;
     const scaledW = CANVAS_W * scale;
-    container.style.marginBottom = (scaledH - CANVAS_H) + 'px';
-    container.style.marginRight = (scaledW - CANVAS_W) + 'px';
-    wrap.style.minHeight = (scaledH + 48) + 'px';
+    
+    if (!isMobile) {
+      container.style.marginBottom = (scaledH - CANVAS_H) + 'px';
+      container.style.marginRight = (scaledW - CANVAS_W) + 'px';
+    } else {
+      container.style.marginBottom = '0';
+      container.style.marginRight = '0';
+    }
+    
+    wrap.style.minHeight = (scaledH + padding) + 'px';
     document.getElementById('canvasDimensions').textContent = CANVAS_W + ' \u00d7 ' + CANVAS_H + 'px';
   }
 
   window.addEventListener('resize', scaleCanvas);
+  window.addEventListener('orientationchange', () => setTimeout(scaleCanvas, 200));
   setTimeout(scaleCanvas, 100);
 
   /* ── History (Undo/Redo) ──────────────────────────────── */
@@ -350,6 +436,10 @@
   }
 
   document.getElementById('addTextBtn').addEventListener('click', () => {
+    // Prevent page scroll/jump on mobile
+    const addButton = document.getElementById('addTextBtn');
+    const scrollY = window.scrollY;
+    
     const txt = new fabric.Textbox('\n', {
       left: CANVAS_W / 2,
       top: addTextAtBottom(),
@@ -392,7 +482,15 @@
       }
     });
 
-    txt.enterEditing();
+    // Enter editing mode without scrolling
+    setTimeout(() => {
+      txt.enterEditing();
+      // Restore scroll position on mobile
+      if (window.innerWidth <= 900) {
+        window.scrollTo(0, scrollY);
+      }
+    }, 50);
+    
     setStatus('Text box added at bottom with auto line break. Double-click to edit.');
   });
 
@@ -732,6 +830,7 @@
     let maxRight = 0;
 
     fabricCanvas.getObjects().forEach(obj => {
+      if (obj.name === 'separator') return; // Skip separator line
       const bbox = obj.getBoundingRect(true);
       minTop = Math.min(minTop, bbox.top);
       minLeft = Math.min(minLeft, bbox.left);
@@ -759,10 +858,20 @@
       height: exportHeight,
     });
 
-    tempFabricCanvas.setBackgroundColor('#ffffff');
+    // Set background color based on format
+    // PNG supports transparency, but JPEG needs a background color
+    if (format === 'png') {
+      tempFabricCanvas.setBackgroundColor('transparent');
+    } else if (format === 'jpeg') {
+      tempFabricCanvas.setBackgroundColor('#ffffff');
+    }
 
     // Load objects and adjust positions
     tempFabricCanvas.loadFromJSON(originalData, () => {
+      // Remove separator line from export
+      const separator = tempFabricCanvas.getObjects().find(obj => obj.name === 'separator');
+      if (separator) tempFabricCanvas.remove(separator);
+      
       // Offset all objects by the crop position
       tempFabricCanvas.getObjects().forEach(obj => {
         obj.set({
@@ -783,13 +892,23 @@
       // Cleanup
       tempFabricCanvas.dispose();
 
-      // Download
+      // Download with mobile support
       const link = document.createElement('a');
       link.href = dataURL;
-      link.download = 'newsframe-' + Date.now() + '.' + (format === 'jpeg' ? 'jpg' : 'png');
+      const filename = 'newsframe-' + Date.now() + '.' + (format === 'jpeg' ? 'jpg' : 'png');
+      link.download = filename;
+      
+      // Better mobile download handling
+      if (navigator.userAgent.match(/iPhone|iPad|iPod|Android/i)) {
+        // Mobile device - try to trigger download
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+      }
+      
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      
       setStatus('Image downloaded (' + exportWidth + '×' + exportHeight + 'px)');
     });
   });
@@ -823,5 +942,48 @@
   // Set default RTL state
   document.getElementById('dirRtl').classList.add('active');
   document.getElementById('dirLtr').classList.remove('active');
+
+  /* ── Mobile Panel Collapsing ──────────────────────────── */
+  if (window.innerWidth <= 900) {
+    // Add collapse icons to panel headers
+    document.querySelectorAll('.panel-header').forEach(header => {
+      const icon = document.createElement('span');
+      icon.className = 'panel-toggle-icon';
+      icon.innerHTML = '<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>';
+      header.appendChild(icon);
+      
+      // Make panels collapsible on mobile
+      header.addEventListener('click', function(e) {
+        // Don't collapse if clicking on a control element
+        if (e.target.closest('button, input, select, label')) return;
+        
+        const panel = this.closest('.panel');
+        panel.classList.toggle('collapsed');
+      });
+    });
+  }
+
+  // Re-check on window resize
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (window.innerWidth <= 900) {
+        document.querySelectorAll('.panel-header').forEach(header => {
+          if (!header.querySelector('.panel-toggle-icon')) {
+            const icon = document.createElement('span');
+            icon.className = 'panel-toggle-icon';
+            icon.innerHTML = '<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>';
+            header.appendChild(icon);
+          }
+        });
+      } else {
+        // Remove collapse functionality on desktop
+        document.querySelectorAll('.panel').forEach(panel => {
+          panel.classList.remove('collapsed');
+        });
+      }
+    }, 250);
+  });
 
 })();
